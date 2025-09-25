@@ -28,13 +28,24 @@ const db = mysql.createConnection({
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    port: process.env.DB_PORT
+    port: process.env.DB_PORT || 3306,
+    connectTimeout: 60000,
+    acquireTimeout: 60000,
+    timeout: 60000,
+    reconnect: true,
+    ssl: {
+        rejectUnauthorized: false
+    }
 });
 
 // Conectar a la base de datos
 db.connect((err) => {
     if (err) {
         console.error('Error conectando a la base de datos:', err);
+        console.error('Host:', process.env.DB_HOST);
+        console.error('User:', process.env.DB_USER);
+        console.error('Database:', process.env.DB_NAME);
+        console.error('Port:', process.env.DB_PORT);
         return;
     }
     console.log('Conectado a la base de datos MySQL');
@@ -43,8 +54,21 @@ db.connect((err) => {
     initializeDatabase();
 });
 
+// Manejo de errores de conexión
+db.on('error', function(err) {
+    console.error('Error de conexión a la base de datos:', err);
+    if (err.code === 'PROTOCOL_CONNECTION_LOST' || err.code === 'ECONNRESET') {
+        console.log('Intentando reconectar...');
+        db.connect();
+    } else {
+        throw err;
+    }
+});
+
 // Función para inicializar la base de datos
 function initializeDatabase() {
+    console.log('Inicializando base de datos...');
+    
     // Crear tabla de usuarios
     const createUsersTable = `
         CREATE TABLE IF NOT EXISTS users (
@@ -53,7 +77,7 @@ function initializeDatabase() {
             password VARCHAR(255) NOT NULL,
             is_admin BOOLEAN DEFAULT FALSE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
+        ) ENGINE=InnoDB
     `;
     
     // Crear tabla de juegos
@@ -64,8 +88,8 @@ function initializeDatabase() {
             is_active BOOLEAN DEFAULT FALSE,
             created_by INT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (created_by) REFERENCES users(id)
-        )
+            FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+        ) ENGINE=InnoDB
     `;
     
     // Crear tabla de participantes
@@ -76,28 +100,63 @@ function initializeDatabase() {
             game_id INT,
             assigned_to INT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id),
-            FOREIGN KEY (game_id) REFERENCES games(id),
-            FOREIGN KEY (assigned_to) REFERENCES users(id),
-            UNIQUE KEY unique_user_game (user_id, game_id),
-            CHECK (user_id != assigned_to)
-        )
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE,
+            FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE CASCADE,
+            UNIQUE KEY unique_user_game (user_id, game_id)
+        ) ENGINE=InnoDB
     `;
     
     db.query(createUsersTable, (err) => {
-        if (err) console.error('Error creando tabla users:', err);
+        if (err) {
+            console.error('Error creando tabla users:', err);
+        } else {
+            console.log('Tabla users creada o ya existe');
+        }
     });
     
     db.query(createGamesTable, (err) => {
-        if (err) console.error('Error creando tabla games:', err);
+        if (err) {
+            console.error('Error creando tabla games:', err);
+        } else {
+            console.log('Tabla games creada o ya existe');
+        }
     });
     
     db.query(createParticipantsTable, (err) => {
-        if (err) console.error('Error creando tabla participants:', err);
+        if (err) {
+            console.error('Error creando tabla participants:', err);
+            console.log('Intentando crear tabla participants sin CHECK constraint...');
+            // Intentar sin CHECK constraint para mayor compatibilidad
+            const createParticipantsTableSimple = `
+                CREATE TABLE IF NOT EXISTS participants (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    user_id INT,
+                    game_id INT,
+                    assigned_to INT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                    FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE,
+                    FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE CASCADE,
+                    UNIQUE KEY unique_user_game (user_id, game_id)
+                ) ENGINE=InnoDB
+            `;
+            db.query(createParticipantsTableSimple, (err2) => {
+                if (err2) {
+                    console.error('Error creando tabla participants simple:', err2);
+                } else {
+                    console.log('Tabla participants creada sin CHECK constraint');
+                }
+            });
+        } else {
+            console.log('Tabla participants creada o ya existe');
+        }
     });
     
-    // Crear usuario administrador por defecto
-    createDefaultAdmin();
+    // Crear usuario administrador por defecto (con delay para asegurar que la tabla existe)
+    setTimeout(() => {
+        createDefaultAdmin();
+    }, 1000);
 }
 
 // Crear administrador por defecto
@@ -167,11 +226,11 @@ app.post('/login', (req, res) => {
     db.query('SELECT * FROM users WHERE username = ?', [username], (err, results) => {
         if (err) {
             console.error('Error en login:', err);
-            return res.render('login', { error: 'Error del servidor' });
+            return res.render('login', { error: 'Error del servidor', success: null });
         }
         
         if (results.length === 0) {
-            return res.render('login', { error: 'Usuario no encontrado' });
+            return res.render('login', { error: 'Usuario no encontrado', success: null });
         }
         
         const user = results[0];
@@ -184,7 +243,7 @@ app.post('/login', (req, res) => {
             };
             res.redirect('/dashboard');
         } else {
-            res.render('login', { error: 'Contraseña incorrecta' });
+            res.render('login', { error: 'Contraseña incorrecta', success: null });
         }
     });
 });

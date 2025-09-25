@@ -86,7 +86,7 @@
                             </div>
                         <% } %>
                         
-                        <% if (success) { %>
+                        <% if (typeof success !== 'undefined' && success) { %>
                             <div class="alert alert-success" role="alert">
                                 <%= success %>
                             </div>

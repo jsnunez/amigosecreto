@@ -1,0 +1,52 @@
+/* Estilos globales para Titan Skate - Amigo Secreto */
+
+:root {
+    --titan-gold: #DAA520;
+    --titan-dark-gold: #B8860B;
+    --titan-red: #8B0000;
+    --titan-bright-red: #DC143C;
+    --titan-black: #000000;
+    --titan-dark-gray: #1a1a1a;
+}
+
+/* Animaciones personalizadas */
+@keyframes glow {
+    0% { box-shadow: 0 0 5px var(--titan-gold); }
+    50% { box-shadow: 0 0 20px var(--titan-gold), 0 0 30px var(--titan-gold); }
+    100% { box-shadow: 0 0 5px var(--titan-gold); }
+}
+
+.glow-effect {
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+/* Efectos hover mejorados */
+.btn:hover {
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    transition: all 0.3s ease;
+}
+
+/* Estilos para el logo */
+.logo-titan {
+    max-width: 150px;
+    height: auto;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+}
+
+/* Gradientes personalizados */
+.bg-titan-gradient {
+    background: linear-gradient(135deg, var(--titan-black) 0%, var(--titan-dark-gray) 50%, var(--titan-red) 100%);
+}
+
+.bg-gold-gradient {
+    background: linear-gradient(135deg, var(--titan-gold) 0%, var(--titan-dark-gold) 100%);
+}
+
+.bg-red-gradient {
+    background: linear-gradient(135deg, var(--titan-red) 0%, var(--titan-bright-red) 100%);
+}

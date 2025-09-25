@@ -1,0 +1,2 @@
+PLACEHOLDER: Coloque aqui la imagen del logo de Titan Skate como logo.png
+La imagen debe ser copiada manualmente a esta carpeta con el nombre "logo.png"

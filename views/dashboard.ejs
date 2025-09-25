@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amigo Secreto - Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #8B0000 100%);
+            min-height: 100vh;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #DAA520 0%, #B8860B 100%) !important;
+            border-bottom: 3px solid #8B0000;
+        }
+        .navbar-brand, .navbar-text {
+            color: #000 !important;
+            font-weight: bold;
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-bottom: 2rem;
+            border: 2px solid #DAA520;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #DAA520 0%, #B8860B 100%);
+            color: #000;
+            border-radius: 15px 15px 0 0 !important;
+            border-bottom: 2px solid #8B0000;
+            font-weight: bold;
+        }
+        .secret-card {
+            background: linear-gradient(135deg, #8B0000 0%, #DC143C 100%);
+            color: white;
+            border: 3px solid #DAA520;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .secret-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 15px 40px rgba(139, 0, 0, 0.5);
+        }
+        .secret-card .card-body {
+            background: transparent;
+        }
+        .gift-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        /* Animaciones para el misterio del amigo secreto */
+        .mystery-card {
+            background: linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%);
+            border: 3px solid #DAA520;
+            cursor: pointer;
+            transition: all 0.5s ease;
+            position: relative;
+            overflow: hidden;
+            color: white;
+        }
+        
+        .mystery-card * {
+            color: white !important;
+        }
+        
+        .mystery-card h4,
+        .mystery-card p,
+        .mystery-card small,
+        .mystery-card div {
+            color: white !important;
+        }
+        
+        .mystery-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 20px 50px rgba(218, 165, 32, 0.3);
+        }
+        
+        .mystery-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(218, 165, 32, 0.1), transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+        
+        @keyframes revealPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes mysteryGlow {
+            0%, 100% { 
+                box-shadow: 0 0 20px rgba(218, 165, 32, 0.5);
+                border-color: #DAA520;
+            }
+            50% { 
+                box-shadow: 0 0 40px rgba(139, 0, 0, 0.8), 0 0 60px rgba(218, 165, 32, 0.6);
+                border-color: #8B0000;
+            }
+        }
+        
+        .mystery-active {
+            animation: mysteryGlow 1.5s infinite ease-in-out;
+            color: white;
+        }
+        
+        .reveal-animation {
+            animation: revealPulse 0.8s ease-out;
+            color: white;
+        }
+        
+        .mystery-text {
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            font-size: 1.2em;
+            color: white;
+        }
+        
+        .click-hint {
+            opacity: 0.8;
+            font-size: 0.9em;
+            animation: pulse 2s infinite;
+            color: white;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+        
+        .revealed-card {
+            background: linear-gradient(135deg, #8B0000 0%, #DC143C 100%) !important;
+            animation: revealPulse 1s ease-out;
+            color: white !important;
+        }
+        
+        .revealed-card * {
+            color: white !important;
+        }
+        
+        .mystery-icons {
+            font-size: 2rem;
+            margin: 0 10px;
+            animation: float 3s ease-in-out infinite;
+            color: white;
+        }
+        
+        .mystery-icons:nth-child(2) { animation-delay: 0.5s; }
+        .mystery-icons:nth-child(3) { animation-delay: 1s; }
+        .mystery-icons:nth-child(4) { animation-delay: 1.5s; }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #DAA520 0%, #B8860B 100%);
+            border: 2px solid #8B0000;
+            color: #000;
+            font-weight: bold;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #B8860B 0%, #DAA520 100%);
+            border: 2px solid #8B0000;
+            color: #000;
+        }
+        .btn-outline-primary {
+            border-color: #8B0000;
+            color: #8B0000;
+            font-weight: bold;
+        }
+        .btn-outline-primary:hover {
+            background-color: #8B0000;
+            border-color: #8B0000;
+            color: #DAA520;
+        }
+        .btn-outline-secondary {
+            border-color: #DAA520;
+            color: #DAA520;
+            font-weight: bold;
+        }
+        .btn-outline-secondary:hover {
+            background-color: #DAA520;
+            border-color: #DAA520;
+            color: #000;
+        }
+        .badge.bg-success {
+            background-color: #8B0000 !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <span class="navbar-brand">⚡ TITANES ELITE - Amigo Secreto</span>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">Hola, <strong><%= user.username %></strong></span>
+                <% if (user.is_admin) { %>
+                    <a class="nav-link btn btn-outline-primary btn-sm me-2" href="/admin">Panel Admin</a>
+                <% } %>
+                <a class="nav-link btn btn-outline-secondary btn-sm" href="/logout">Cerrar Sesión</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Estado del juego -->
+        <% if (games.length === 0) { %>
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div class="gift-icon">🎁</div>
+                            <h3>No hay juegos activos</h3>
+                            <p class="text-muted">Espera a que un administrador active un juego de Amigo Secreto.</p>
+                            <% if (user.is_admin) { %>
+                                <a href="/admin" class="btn btn-primary">Ir al Panel de Administración</a>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <% } else { %>
+            <!-- Juego activo -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4><i class="fas fa-gamepad"></i> Juego Activo</h4>
+                        </div>
+                        <div class="card-body">
+                            <h5><%= games[0].name %></h5>
+                            <p class="text-muted">Estado: <span class="badge bg-success">Activo</span></p>
+                            <p><small>Creado el <%= new Date(games[0].created_at).toLocaleDateString() %></small></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <% if (myAssignment) { %>
+                        <!-- Mostrar asignación con misterio -->
+                        <div class="card mystery-card mystery-active" id="mysteryCard" onclick="revealSecret()">
+                            <div class="card-body text-center">
+                                <div class="mystery-content" id="mysteryContent">
+                                    <div class="gift-icon">🎁</div>
+                                    <div class="mystery-icons-container mb-3">
+                                        <span class="mystery-icons">🔮</span>
+                                        <span class="mystery-icons">✨</span>
+                                        <span class="mystery-icons">❓</span>
+                                        <span class="mystery-icons">🎭</span>
+                                    </div>
+                                    <h4 class="mystery-text">¡Tu Amigo Secreto te Espera!</h4>
+                                    <p class="mb-3">El misterio está por revelarse...</p>
+                                    <div class="click-hint">
+                                        <i class="fas fa-hand-pointer"></i> Haz clic para descubrir
+                                    </div>
+                                </div>
+                                
+                                <div class="revealed-content" id="revealedContent" style="display: none;">
+                                    <div class="gift-icon">🎉</div>
+                                    <h4>¡Tu Amigo Secreto es:</h4>
+                                    <h2 class="mb-3 text-warning"><strong><%= myAssignment.assigned_username %></strong></h2>
+                                    <p class="mb-2">¡Prepara un regalo especial! �</p>
+                                    <small>⚠️ No puedes cambiar tu asignación</small>
+                                    <div class="mt-3">
+                                        <button class="btn btn-sm btn-outline-light" onclick="hideSecret()">
+                                            <i class="fas fa-eye-slash"></i> Ocultar nuevamente
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <% } else { %>
+                        <!-- Sin asignación -->
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <div class="gift-icon text-muted">❓</div>
+                                <h4>Esperando asignación...</h4>
+                                <p class="text-muted">El administrador aún no ha generado las asignaciones para este juego.</p>
+                            </div>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+            
+            <!-- Instrucciones -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4>📋 Instrucciones</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="text-center mb-3">
+                                        <div style="font-size: 2rem;">🎯</div>
+                                        <h5>1. Tu Misión</h5>
+                                        <p>Prepara un regalo para la persona que te fue asignada</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center mb-3">
+                                        <div style="font-size: 2rem;">🤐</div>
+                                        <h5>2. Mantén el Secreto</h5>
+                                        <p>No reveles que eres el amigo secreto de esa persona</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center mb-3">
+                                        <div style="font-size: 2rem;">🔒</div>
+                                        <h5>3. Garantía</h5>
+                                        <p>El sistema garantiza que nunca serás tu propio amigo secreto</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center mb-3">
+                                        <div style="font-size: 2rem;">🎉</div>
+                                        <h5>4. ¡Diviértete!</h5>
+                                        <p>Disfruta la sorpresa y la emoción del intercambio</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <% } %>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        let isRevealed = false;
+        
+        function revealSecret() {
+            if (isRevealed) return;
+            
+            const mysteryCard = document.getElementById('mysteryCard');
+            const mysteryContent = document.getElementById('mysteryContent');
+            const revealedContent = document.getElementById('revealedContent');
+            
+            // Agregar efectos sonoros (opcional, requiere archivos de audio)
+            // new Audio('/sounds/reveal.mp3').play().catch(() => {});
+            
+            // Animación de transición
+            mysteryCard.style.transition = 'all 0.8s ease-out';
+            mysteryCard.classList.remove('mystery-active');
+            mysteryCard.classList.add('reveal-animation');
+            
+            // Ocultar contenido misterioso con animación
+            mysteryContent.style.opacity = '0';
+            mysteryContent.style.transform = 'scale(0.8)';
+            mysteryContent.style.transition = 'all 0.5s ease-out';
+            
+            setTimeout(() => {
+                mysteryContent.style.display = 'none';
+                revealedContent.style.display = 'block';
+                revealedContent.style.opacity = '0';
+                revealedContent.style.transform = 'scale(0.8)';
+                
+                // Cambiar el fondo de la tarjeta
+                mysteryCard.classList.add('revealed-card');
+                
+                setTimeout(() => {
+                    revealedContent.style.transition = 'all 0.6s ease-out';
+                    revealedContent.style.opacity = '1';
+                    revealedContent.style.transform = 'scale(1)';
+                    
+                    // Efecto de confetti (opcional)
+                    createConfetti();
+                    
+                    isRevealed = true;
+                }, 100);
+            }, 500);
+        }
+        
+        function hideSecret() {
+            if (!isRevealed) return;
+            
+            const mysteryCard = document.getElementById('mysteryCard');
+            const mysteryContent = document.getElementById('mysteryContent');
+            const revealedContent = document.getElementById('revealedContent');
+            
+            // Ocultar contenido revelado
+            revealedContent.style.transition = 'all 0.5s ease-out';
+            revealedContent.style.opacity = '0';
+            revealedContent.style.transform = 'scale(0.8)';
+            
+            setTimeout(() => {
+                revealedContent.style.display = 'none';
+                mysteryContent.style.display = 'block';
+                mysteryContent.style.opacity = '0';
+                mysteryContent.style.transform = 'scale(0.8)';
+                
+                // Restaurar el fondo misterioso
+                mysteryCard.classList.remove('revealed-card');
+                mysteryCard.classList.add('mystery-active');
+                
+                setTimeout(() => {
+                    mysteryContent.style.transition = 'all 0.6s ease-out';
+                    mysteryContent.style.opacity = '1';
+                    mysteryContent.style.transform = 'scale(1)';
+                    
+                    isRevealed = false;
+                }, 100);
+            }, 500);
+        }
+        
+        function createConfetti() {
+            // Crear efecto de confetti simple
+            const confettiContainer = document.createElement('div');
+            confettiContainer.style.position = 'fixed';
+            confettiContainer.style.top = '0';
+            confettiContainer.style.left = '0';
+            confettiContainer.style.width = '100%';
+            confettiContainer.style.height = '100%';
+            confettiContainer.style.pointerEvents = 'none';
+            confettiContainer.style.zIndex = '9999';
+            document.body.appendChild(confettiContainer);
+            
+            const colors = ['#DAA520', '#8B0000', '#DC143C', '#FFD700', '#FF6B6B'];
+            const emojis = ['🎉', '🎊', '✨', '🎁', '⭐'];
+            
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                const isEmoji = Math.random() > 0.7;
+                
+                if (isEmoji) {
+                    confetti.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
+                    confetti.style.fontSize = '20px';
+                } else {
+                    confetti.style.width = '10px';
+                    confetti.style.height = '10px';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.borderRadius = '50%';
+                }
+                
+                confetti.style.position = 'absolute';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.top = '-10px';
+                confetti.style.animation = `confettiFall ${2 + Math.random() * 3}s ease-out forwards`;
+                confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                
+                confettiContainer.appendChild(confetti);
+            }
+            
+            // Limpiar confetti después de la animación
+            setTimeout(() => {
+                document.body.removeChild(confettiContainer);
+            }, 5000);
+        }
+        
+        // Agregar estilos CSS dinámicamente para el confetti
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes confettiFall {
+                0% {
+                    transform: translateY(-10px) rotate(0deg);
+                    opacity: 1;
+                }
+                100% {
+                    transform: translateY(100vh) rotate(720deg);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Agregar efecto hover mejorado
+        document.addEventListener('DOMContentLoaded', function() {
+            const mysteryCard = document.getElementById('mysteryCard');
+            if (mysteryCard) {
+                mysteryCard.addEventListener('mouseenter', function() {
+                    if (!isRevealed) {
+                        this.style.transform = 'scale(1.05) rotateY(5deg)';
+                        this.style.boxShadow = '0 25px 60px rgba(218, 165, 32, 0.4)';
+                    }
+                });
+                
+                mysteryCard.addEventListener('mouseleave', function() {
+                    if (!isRevealed) {
+                        this.style.transform = 'scale(1) rotateY(0deg)';
+                        this.style.boxShadow = '0 20px 50px rgba(218, 165, 32, 0.3)';
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

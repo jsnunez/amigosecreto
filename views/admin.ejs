@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - Amigo Secreto</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #8B0000 100%);
+            min-height: 100vh;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #DAA520 0%, #B8860B 100%) !important;
+            border-bottom: 3px solid #8B0000;
+        }
+        .navbar-brand, .navbar-text {
+            color: #000 !important;
+            font-weight: bold;
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-bottom: 2rem;
+            border: 2px solid #DAA520;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #DAA520 0%, #B8860B 100%);
+            color: #000;
+            border-radius: 15px 15px 0 0 !important;
+            border-bottom: 2px solid #8B0000;
+            font-weight: bold;
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #8B0000 0%, #DC143C 100%);
+            border: 2px solid #DAA520;
+            color: #DAA520;
+            font-weight: bold;
+        }
+        .btn-success:hover {
+            background: linear-gradient(135deg, #DC143C 0%, #8B0000 100%);
+            border: 2px solid #DAA520;
+            color: #DAA520;
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #8B0000 0%, #DC143C 100%);
+            border: 2px solid #000;
+            color: #DAA520;
+        }
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #DC143C 0%, #8B0000 100%);
+            border: 2px solid #000;
+            color: #DAA520;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #DAA520 0%, #B8860B 100%);
+            border: 2px solid #8B0000;
+            color: #000;
+            font-weight: bold;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #B8860B 0%, #DAA520 100%);
+            border: 2px solid #8B0000;
+            color: #000;
+        }
+        .btn-outline-primary {
+            border-color: #8B0000;
+            color: #8B0000;
+            font-weight: bold;
+        }
+        .btn-outline-primary:hover {
+            background-color: #8B0000;
+            border-color: #8B0000;
+            color: #DAA520;
+        }
+        .btn-outline-secondary {
+            border-color: #DAA520;
+            color: #DAA520;
+            font-weight: bold;
+        }
+        .btn-outline-secondary:hover {
+            background-color: #DAA520;
+            border-color: #DAA520;
+            color: #000;
+        }
+        .admin-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #DAA520;
+        }
+        .badge.bg-success {
+            background-color: #8B0000 !important;
+        }
+        .badge.bg-warning {
+            background-color: #DAA520 !important;
+            color: #000 !important;
+        }
+        .badge.bg-info {
+            background-color: #8B0000 !important;
+        }
+        .form-control {
+            border: 2px solid #DAA520;
+        }
+        .form-control:focus {
+            border-color: #8B0000;
+            box-shadow: 0 0 0 0.2rem rgba(139, 0, 0, 0.25);
+        }
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: rgba(218, 165, 32, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <span class="navbar-brand">⚡ TITANES ELITE - Admin</span>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">Admin: <strong><%= user.username %></strong></span>
+                <a class="nav-link btn btn-outline-primary btn-sm me-2" href="/dashboard">Dashboard</a>
+                <a class="nav-link btn btn-outline-secondary btn-sm" href="/logout">Cerrar Sesión</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Alertas -->
+        <% if (typeof success !== 'undefined') { %>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <%= success %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <% } %>
+        
+        <% if (typeof error !== 'undefined') { %>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <%= error %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <% } %>
+
+        <div class="row">
+            <!-- Crear nuevo juego -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>🎮 Crear Nuevo Juego</h4>
+                    </div>
+                    <div class="card-body">
+                        <form action="/admin/create-game" method="POST">
+                            <div class="mb-3">
+                                <label for="gameName" class="form-label">Nombre del Juego</label>
+                                <input type="text" class="form-control" id="gameName" name="gameName" 
+                                       placeholder="Ej: Navidad 2023, Intercambio de Regalos..." required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Crear Juego</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estadísticas -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>📊 Estadísticas</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="admin-icon">👥</div>
+                                <h3><%= users.length %></h3>
+                                <p class="mb-0">Usuarios Registrados</p>
+                            </div>
+                            <div class="col-6">
+                                <div class="admin-icon">🎯</div>
+                                <h3><%= games.length %></h3>
+                                <p class="mb-0">Juegos Creados</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de juegos -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>🎯 Gestión de Juegos</h4>
+                    </div>
+                    <div class="card-body">
+                        <% if (games.length === 0) { %>
+                            <div class="text-center text-muted">
+                                <p>No hay juegos creados aún.</p>
+                            </div>
+                        <% } else { %>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Nombre</th>
+                                            <th>Estado</th>
+                                            <th>Fecha de Creación</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% games.forEach(game => { %>
+                                            <tr>
+                                                <td><%= game.id %></td>
+                                                <td><%= game.name %></td>
+                                                <td>
+                                                    <% if (game.is_active) { %>
+                                                        <span class="badge bg-success">Activo</span>
+                                                    <% } else { %>
+                                                        <span class="badge bg-secondary">Inactivo</span>
+                                                    <% } %>
+                                                </td>
+                                                <td><%= new Date(game.created_at).toLocaleDateString() %></td>
+                                                <td>
+                                                    <% if (!game.is_active) { %>
+                                                        <form action="/admin/activate-game/<%= game.id %>" method="POST" style="display: inline;">
+                                                            <button type="submit" class="btn btn-success btn-sm" 
+                                                                    onclick="return confirm('¿Estás seguro de activar este juego? Esto generará nuevas asignaciones aleatorias y desactivará otros juegos.')">
+                                                                Activar
+                                                            </button>
+                                                        </form>
+                                                    <% } else { %>
+                                                        <span class="text-success">✓ Activo</span>
+                                                    <% } %>
+                                                </td>
+                                            </tr>
+                                        <% }); %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de usuarios -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>👥 Usuarios Registrados</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Usuario</th>
+                                        <th>Tipo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% users.forEach(user => { %>
+                                        <tr>
+                                            <td><%= user.id %></td>
+                                            <td><%= user.username %></td>
+                                            <td>
+                                                <% if (user.is_admin) { %>
+                                                    <span class="badge bg-warning">Administrador</span>
+                                                <% } else { %>
+                                                    <span class="badge bg-info">Usuario</span>
+                                                <% } %>
+                                            </td>
+                                        </tr>
+                                    <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instrucciones para el administrador -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>📋 Instrucciones de Administrador</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <h5>1. Crear Juego</h5>
+                                <p>Crea un nuevo juego con un nombre descriptivo (ej: "Navidad 2023")</p>
+                            </div>
+                            <div class="col-md-3">
+                                <h5>2. Activar Juego</h5>
+                                <p>Activa el juego cuando todos los participantes estén registrados. Esto generará las asignaciones automáticamente.</p>
+                            </div>
+                            <div class="col-md-3">
+                                <h5>3. Algoritmo Inteligente</h5>
+                                <p>🔄 El sistema garantiza que ninguna persona sea su propio amigo secreto mediante un algoritmo de validación.</p>
+                            </div>
+                            <div class="col-md-3">
+                                <h5>4. Importante</h5>
+                                <p>⚠️ Una vez activado, las asignaciones no se pueden cambiar. Solo un juego puede estar activo a la vez.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Obtener parámetros de la URL para mostrar alertas
+        const urlParams = new URLSearchParams(window.location.search);
+        const success = urlParams.get('success');
+        const error = urlParams.get('error');
+        
+        if (success) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show';
+            alertDiv.innerHTML = `
+                ${success}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.container').firstChild);
+        }
+        
+        if (error) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+            alertDiv.innerHTML = `
+                ${error}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.container').firstChild);
+        }
+    </script>
+</body>
+</html>

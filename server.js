@@ -156,7 +156,8 @@ app.get('/', (req, res) => {
 
 // Página de login
 app.get('/login', (req, res) => {
-    res.render('login', { error: null });
+    const success = req.query.success || null;
+    res.render('login', { error: null, success: success });
 });
 
 // Procesar login
@@ -216,7 +217,8 @@ app.post('/register', (req, res) => {
             return res.render('register', { error: 'Error del servidor', success: null });
         }
         
-        res.render('register', { error: null, success: 'Usuario registrado exitosamente. Puedes iniciar sesión.' });
+        // Redirigir al login después del registro exitoso
+        res.redirect('/login?success=Usuario registrado exitosamente. Puedes iniciar sesión.');
     });
 });
 

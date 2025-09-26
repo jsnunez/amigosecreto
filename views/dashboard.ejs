@@ -164,6 +164,179 @@
             0%, 100% { transform: translateY(0px); }
             50% { transform: translateY(-10px); }
         }
+        
+        /* Estilos para la ruleta */
+        .roulette-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .roulette-pointer-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .roulette-pointer {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 32px;
+            color: #DAA520;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8), 0 0 15px rgba(218, 165, 32, 1);
+            z-index: 12;
+            pointer-events: none;
+            animation: pointerGlow 1.5s ease-in-out infinite alternate;
+        }
+        
+        @keyframes pointerGlow {
+            0% {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.8), 0 0 15px rgba(218, 165, 32, 0.8);
+                transform: translateX(-50%) scale(1);
+            }
+            100% {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.8), 0 0 25px rgba(218, 165, 32, 1), 0 0 35px rgba(139, 0, 0, 0.5);
+                transform: translateX(-50%) scale(1.1);
+            }
+        }
+        
+        .roulette-wheel {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            position: relative;
+            border: 10px solid #DAA520;
+            box-shadow: 0 0 30px rgba(218, 165, 32, 0.6), 0 0 60px rgba(218, 165, 32, 0.3);
+            background: conic-gradient(
+                from 0deg,
+                #8B0000 0deg 60deg,
+                #DAA520 60deg 120deg,
+                #DC143C 120deg 180deg,
+                #B8860B 180deg 240deg,
+                #8B0000 240deg 300deg,
+                #DAA520 300deg 360deg
+            );
+            animation: wheelGlow 2s ease-in-out infinite alternate;
+            transition: transform 3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        .roulette-wheel::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 40px;
+            height: 40px;
+            background: #DAA520;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            border: 3px solid #000;
+        }
+        
+        .roulette-title {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #DAA520;
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            animation: titlePulse 2s ease-in-out infinite alternate;
+        }
+        
+        .roulette-subtitle {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #DAA520;
+            font-size: 1.2rem;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes titlePulse {
+            0% {
+                color: #DAA520;
+                text-shadow: 0 2px 4px rgba(0,0,0,0.8), 0 0 20px rgba(218, 165, 32, 0.6);
+            }
+            100% {
+                color: #DC143C;
+                text-shadow: 0 2px 4px rgba(0,0,0,0.8), 0 0 30px rgba(220, 20, 60, 0.8);
+            }
+        }
+        
+        @keyframes wheelGlow {
+            0% {
+                box-shadow: 0 0 30px rgba(218, 165, 32, 0.6), 0 0 60px rgba(218, 165, 32, 0.3);
+            }
+            100% {
+                box-shadow: 0 0 40px rgba(218, 165, 32, 0.8), 0 0 80px rgba(218, 165, 32, 0.5), 0 0 100px rgba(139, 0, 0, 0.3);
+            }
+        }
+        
+        .roulette-names {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .roulette-name {
+            position: absolute;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            transform-origin: center;
+        }
+        
+        .roulette-name:nth-child(1) { transform: rotate(30deg) translateY(-120px); }
+        .roulette-name:nth-child(2) { transform: rotate(90deg) translateY(-120px); }
+        .roulette-name:nth-child(3) { transform: rotate(150deg) translateY(-120px); }
+        .roulette-name:nth-child(4) { transform: rotate(210deg) translateY(-120px); }
+        .roulette-name:nth-child(5) { transform: rotate(270deg) translateY(-120px); }
+        .roulette-name:nth-child(6) { transform: rotate(330deg) translateY(-120px); }
+        
+        .roulette-title {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #DAA520;
+            font-size: 2rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            animation: pulse 2s infinite;
+        }
+        
+        .roulette-subtitle {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 1.2rem;
+            text-align: center;
+            opacity: 0.9;
+        }
         .btn-primary {
             background: linear-gradient(135deg, #DAA520 0%, #B8860B 100%);
             border: 2px solid #8B0000;
@@ -262,9 +435,9 @@
                                         <span class="mystery-icons">🎭</span>
                                     </div>
                                     <h4 class="mystery-text">¡Tu Amigo Secreto te Espera!</h4>
-                                    <p class="mb-3">El misterio está por revelarse...</p>
+                                    <p class="mb-3">La ruleta del destino decidirá...</p>
                                     <div class="click-hint">
-                                        <i class="fas fa-hand-pointer"></i> Haz clic para descubrir
+                                        <i class="fas fa-hand-pointer"></i> Haz clic para girar la ruleta 🎰
                                     </div>
                                 </div>
                                 
@@ -340,6 +513,20 @@
         <% } %>
     </div>
 
+    <!-- Contenedor de la ruleta -->
+    <div class="roulette-container" id="rouletteContainer">
+        <div class="roulette-title">🎰 RULETA DEL AMIGO SECRETO</div>
+        <div class="roulette-pointer-container">
+            <div class="roulette-pointer">▼</div>
+            <div class="roulette-wheel" id="rouletteWheel">
+                <div class="roulette-names" id="rouletteNames">
+                    <!-- Los nombres se llenarán dinámicamente -->
+                </div>
+            </div>
+        </div>
+        <div class="roulette-subtitle">Girando para encontrar tu amigo secreto...</div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
@@ -348,19 +535,117 @@
         function revealSecret() {
             if (isRevealed) return;
             
+            // Mostrar la ruleta
+            showRoulette();
+        }
+        
+        function showRoulette() {
+            const rouletteContainer = document.getElementById('rouletteContainer');
+            const rouletteWheel = document.getElementById('rouletteWheel');
+            const rouletteNames = document.getElementById('rouletteNames');
+            
+            // Obtener el nombre del amigo secreto asignado
+            const secretName = '<%= myAssignment ? myAssignment.assigned_username : "Usuario" %>';
+            
+            // Obtener todos los nombres de usuarios de la base de datos
+            const allUsersFromDB = <%- JSON.stringify(allUsers || []) %>;
+            
+            // Si no hay usuarios, usar nombres por defecto
+            if (allUsersFromDB.length === 0) {
+                allUsersFromDB.push('Usuario1', 'Usuario2', 'Usuario3', 'Usuario4', 'Usuario5');
+            }
+            
+            // Crear una lista de nombres para mostrar en la ruleta
+            let rouletteNames_list = [...allUsersFromDB];
+            
+            // Si el nombre secreto no está en la lista, agregarlo
+            if (!rouletteNames_list.includes(secretName)) {
+                rouletteNames_list.push(secretName);
+            }
+            
+            // Mezclar los nombres
+            shuffleArray(rouletteNames_list);
+            
+            // Tomar solo 6 nombres
+            const finalNames = rouletteNames_list.slice(0, 6);
+            
+            // Asegurarse de que el nombre secreto esté incluido
+            if (!finalNames.includes(secretName)) {
+                finalNames[5] = secretName; // Reemplazar el último
+            }
+            
+            // Posicionar el nombre secreto en una posición específica (posición 0 para que quede arriba)
+            const secretIndex = finalNames.indexOf(secretName);
+            if (secretIndex !== 0) {
+                // Intercambiar para que el secreto quede en posición 0
+                [finalNames[0], finalNames[secretIndex]] = [finalNames[secretIndex], finalNames[0]];
+            }
+            
+            // Limpiar nombres anteriores
+            rouletteNames.innerHTML = '';
+            
+            // Agregar nombres a la ruleta
+            finalNames.forEach((name, index) => {
+                const nameElement = document.createElement('div');
+                nameElement.className = 'roulette-name';
+                nameElement.textContent = name;
+                nameElement.style.transform = `rotate(${index * 60}deg) translateY(-120px)`;
+                rouletteNames.appendChild(nameElement);
+            });
+            
+            // Mostrar la ruleta
+            rouletteContainer.style.display = 'flex';
+            
+            // Agregar efectos sonoros
+            playRouletteSound();
+            
+            // Calcular rotación para que termine en la posición correcta (nombre secreto en posición 0)
+            // Queremos que termine con el nombre secreto arriba (posición 0 = 0 grados)
+            const finalRotation = 1440; // 4 vueltas completas para terminar en la posición original
+            
+            // Aplicar la rotación directamente con CSS
+            setTimeout(() => {
+                rouletteWheel.style.transform = `rotate(${finalRotation}deg)`;
+                rouletteWheel.style.transition = 'transform 3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                
+                // Después de que termine la animación, mostrar el resultado
+                setTimeout(() => {
+                    hideRoulette();
+                    showSecretResult();
+                }, 3200);
+                
+            }, 500);
+        }
+        
+        function hideRoulette() {
+            const rouletteContainer = document.getElementById('rouletteContainer');
+            rouletteContainer.style.opacity = '0';
+            rouletteContainer.style.transition = 'opacity 0.5s ease-out';
+            
+            setTimeout(() => {
+                rouletteContainer.style.display = 'none';
+                rouletteContainer.style.opacity = '1';
+                rouletteContainer.style.transition = '';
+                
+                // Resetear la ruleta para la próxima vez
+                const rouletteWheel = document.getElementById('rouletteWheel');
+                rouletteWheel.classList.remove('roulette-spinning');
+                rouletteWheel.style.animation = ''; // Limpiar animación personalizada
+                rouletteWheel.style.transform = ''; // Resetear transformación
+            }, 500);
+        }
+        
+        function showSecretResult() {
             const mysteryCard = document.getElementById('mysteryCard');
             const mysteryContent = document.getElementById('mysteryContent');
             const revealedContent = document.getElementById('revealedContent');
             
-            // Agregar efectos sonoros (opcional, requiere archivos de audio)
-            // new Audio('/sounds/reveal.mp3').play().catch(() => {});
-            
-            // Animación de transición
+            // Animación de transición en la tarjeta
             mysteryCard.style.transition = 'all 0.8s ease-out';
             mysteryCard.classList.remove('mystery-active');
             mysteryCard.classList.add('reveal-animation');
             
-            // Ocultar contenido misterioso con animación
+            // Ocultar contenido misterioso
             mysteryContent.style.opacity = '0';
             mysteryContent.style.transform = 'scale(0.8)';
             mysteryContent.style.transition = 'all 0.5s ease-out';
@@ -379,12 +664,24 @@
                     revealedContent.style.opacity = '1';
                     revealedContent.style.transform = 'scale(1)';
                     
-                    // Efecto de confetti (opcional)
+                    // Efecto de confetti
                     createConfetti();
+                    
+                    // Sonido de victoria
+                    setTimeout(() => {
+                        playWinSound();
+                    }, 200);
                     
                     isRevealed = true;
                 }, 100);
             }, 500);
+        }
+        
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
         }
         
         function hideSecret() {
@@ -417,6 +714,113 @@
                     isRevealed = false;
                 }, 100);
             }, 500);
+        }
+        
+        // Funciones de sonido usando Web Audio API
+        function playRouletteSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Sonido de giro de ruleta (frecuencias cambiantes)
+                const duration = 3; // 3 segundos
+                const startTime = audioContext.currentTime;
+                
+                // Crear oscilador para el sonido principal
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                // Configurar el sonido
+                oscillator.type = 'sawtooth';
+                oscillator.frequency.setValueAtTime(200, startTime);
+                
+                // Crear efecto de aceleración y desaceleración
+                for (let i = 0; i < duration * 10; i++) {
+                    const time = startTime + (i / 10);
+                    const progress = i / (duration * 10);
+                    
+                    // Simular desaceleración de ruleta
+                    const speed = Math.max(0.1, 1 - progress);
+                    const frequency = 150 + (speed * 100) + Math.sin(time * 20) * 20;
+                    
+                    oscillator.frequency.setValueAtTime(frequency, time);
+                    gainNode.gain.setValueAtTime(0.1 * speed, time);
+                }
+                
+                oscillator.start(startTime);
+                oscillator.stop(startTime + duration);
+                
+                // Agregar sonido de "tick" periódico
+                playTickSound(audioContext, startTime, duration);
+                
+            } catch (error) {
+                console.log('Audio no soportado en este navegador:', error);
+            }
+        }
+        
+        function playTickSound(audioContext, startTime, duration) {
+            const tickInterval = 0.15; // Intervalo entre ticks
+            const tickCount = Math.floor(duration / tickInterval);
+            
+            for (let i = 0; i < tickCount; i++) {
+                const tickTime = startTime + (i * tickInterval);
+                const progress = i / tickCount;
+                
+                // Desacelerar los ticks gradualmente
+                const actualTickTime = tickTime + (progress * progress * 0.5);
+                
+                if (actualTickTime < startTime + duration) {
+                    // Crear tick individual
+                    const tickOsc = audioContext.createOscillator();
+                    const tickGain = audioContext.createGain();
+                    
+                    tickOsc.connect(tickGain);
+                    tickGain.connect(audioContext.destination);
+                    
+                    tickOsc.type = 'square';
+                    tickOsc.frequency.setValueAtTime(800, actualTickTime);
+                    
+                    tickGain.gain.setValueAtTime(0, actualTickTime);
+                    tickGain.gain.linearRampToValueAtTime(0.15, actualTickTime + 0.01);
+                    tickGain.gain.exponentialRampToValueAtTime(0.001, actualTickTime + 0.1);
+                    
+                    tickOsc.start(actualTickTime);
+                    tickOsc.stop(actualTickTime + 0.1);
+                }
+            }
+        }
+        
+        function playWinSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const startTime = audioContext.currentTime;
+                
+                // Sonido de victoria - arpeggio ascendente
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                
+                notes.forEach((freq, index) => {
+                    const osc = audioContext.createOscillator();
+                    const gain = audioContext.createGain();
+                    
+                    osc.connect(gain);
+                    gain.connect(audioContext.destination);
+                    
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, startTime + index * 0.2);
+                    
+                    gain.gain.setValueAtTime(0, startTime + index * 0.2);
+                    gain.gain.linearRampToValueAtTime(0.2, startTime + index * 0.2 + 0.1);
+                    gain.gain.exponentialRampToValueAtTime(0.001, startTime + index * 0.2 + 0.5);
+                    
+                    osc.start(startTime + index * 0.2);
+                    osc.stop(startTime + index * 0.2 + 0.5);
+                });
+                
+            } catch (error) {
+                console.log('Audio no soportado en este navegador:', error);
+            }
         }
         
         function createConfetti() {
@@ -487,6 +891,9 @@
                     if (!isRevealed) {
                         this.style.transform = 'scale(1.05) rotateY(5deg)';
                         this.style.boxShadow = '0 25px 60px rgba(218, 165, 32, 0.4)';
+                        
+                        // Sonido sutil de hover
+                        playHoverSound();
                     }
                 });
                 
@@ -498,6 +905,33 @@
                 });
             }
         });
+        
+        function playHoverSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const startTime = audioContext.currentTime;
+                
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                
+                osc.connect(gain);
+                gain.connect(audioContext.destination);
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, startTime);
+                osc.frequency.linearRampToValueAtTime(800, startTime + 0.1);
+                
+                gain.gain.setValueAtTime(0, startTime);
+                gain.gain.linearRampToValueAtTime(0.05, startTime + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.2);
+                
+                osc.start(startTime);
+                osc.stop(startTime + 0.2);
+                
+            } catch (error) {
+                console.log('Audio no soportado');
+            }
+        }
     </script>
 </body>
 </html>

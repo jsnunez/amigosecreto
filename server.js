@@ -29,13 +29,7 @@ const db = mysql.createConnection({
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     port: process.env.DB_PORT || 3306,
-    connectTimeout: 60000,
-    acquireTimeout: 60000,
-    timeout: 60000,
-    reconnect: true,
-    ssl: {
-        rejectUnauthorized: false
-    }
+    connectTimeout: 60000
 });
 
 // Conectar a la base de datos
@@ -287,33 +281,49 @@ app.get('/dashboard', requireAuth, (req, res) => {
     db.query('SELECT * FROM games WHERE is_active = TRUE ORDER BY created_at DESC', (err, games) => {
         if (err) {
             console.error('Error obteniendo juegos:', err);
-            return res.render('dashboard', { user: req.session.user, games: [], myAssignment: null });
+            return res.render('dashboard', { user: req.session.user, games: [], myAssignment: null, allUsers: [] });
         }
         
-        // Si hay juegos activos, obtener la asignación del usuario
-        if (games.length > 0) {
-            const gameId = games[0].id;
-            const userId = req.session.user.id;
+        // Obtener todos los usuarios (excepto administradores) para la ruleta
+        db.query('SELECT username FROM users WHERE is_admin = FALSE ORDER BY username', (err, users) => {
+            if (err) {
+                console.error('Error obteniendo usuarios:', err);
+                users = [];
+            }
             
-            db.query(`
-                SELECT p.*, u.username as assigned_username 
-                FROM participants p 
-                JOIN users u ON p.assigned_to = u.id 
-                WHERE p.user_id = ? AND p.game_id = ?
-            `, [userId, gameId], (err, assignment) => {
-                if (err) {
-                    console.error('Error obteniendo asignación:', err);
-                }
+            const allUsers = users.map(user => user.username);
+            
+            // Si hay juegos activos, obtener la asignación del usuario
+            if (games.length > 0) {
+                const gameId = games[0].id;
+                const userId = req.session.user.id;
                 
+                db.query(`
+                    SELECT p.*, u.username as assigned_username 
+                    FROM participants p 
+                    JOIN users u ON p.assigned_to = u.id 
+                    WHERE p.user_id = ? AND p.game_id = ?
+                `, [userId, gameId], (err, assignment) => {
+                    if (err) {
+                        console.error('Error obteniendo asignación:', err);
+                    }
+                    
+                    res.render('dashboard', { 
+                        user: req.session.user, 
+                        games: games, 
+                        myAssignment: assignment.length > 0 ? assignment[0] : null,
+                        allUsers: allUsers
+                    });
+                });
+            } else {
                 res.render('dashboard', { 
                     user: req.session.user, 
                     games: games, 
-                    myAssignment: assignment.length > 0 ? assignment[0] : null 
+                    myAssignment: null,
+                    allUsers: allUsers
                 });
-            });
-        } else {
-            res.render('dashboard', { user: req.session.user, games: games, myAssignment: null });
-        }
+            }
+        });
     });
 });
 

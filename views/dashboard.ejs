@@ -716,80 +716,163 @@
             }, 500);
         }
         
-        // Funciones de sonido usando Web Audio API
+        // Funciones de sonido mejoradas usando Web Audio API
         function playRouletteSound() {
             try {
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                
-                // Sonido de giro de ruleta (frecuencias cambiantes)
                 const duration = 3; // 3 segundos
                 const startTime = audioContext.currentTime;
                 
-                // Crear oscilador para el sonido principal
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                // Configurar el sonido
-                oscillator.type = 'sawtooth';
-                oscillator.frequency.setValueAtTime(200, startTime);
-                
-                // Crear efecto de aceleración y desaceleración
-                for (let i = 0; i < duration * 10; i++) {
-                    const time = startTime + (i / 10);
-                    const progress = i / (duration * 10);
-                    
-                    // Simular desaceleración de ruleta
-                    const speed = Math.max(0.1, 1 - progress);
-                    const frequency = 150 + (speed * 100) + Math.sin(time * 20) * 20;
-                    
-                    oscillator.frequency.setValueAtTime(frequency, time);
-                    gainNode.gain.setValueAtTime(0.1 * speed, time);
-                }
-                
-                oscillator.start(startTime);
-                oscillator.stop(startTime + duration);
-                
-                // Agregar sonido de "tick" periódico
-                playTickSound(audioContext, startTime, duration);
+                // Crear un sonido más complejo y realista
+                createRouletteMainSound(audioContext, startTime, duration);
+                createRouletteTickSound(audioContext, startTime, duration);
+                createRouletteWhooshSound(audioContext, startTime, duration);
                 
             } catch (error) {
                 console.log('Audio no soportado en este navegador:', error);
             }
         }
         
-        function playTickSound(audioContext, startTime, duration) {
-            const tickInterval = 0.15; // Intervalo entre ticks
-            const tickCount = Math.floor(duration / tickInterval);
+        function createRouletteMainSound(audioContext, startTime, duration) {
+            // Sonido base de rotación con filtros
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            const filter = audioContext.createBiquadFilter();
+            const distortion = audioContext.createWaveShaper();
             
-            for (let i = 0; i < tickCount; i++) {
-                const tickTime = startTime + (i * tickInterval);
-                const progress = i / tickCount;
-                
-                // Desacelerar los ticks gradualmente
-                const actualTickTime = tickTime + (progress * progress * 0.5);
-                
-                if (actualTickTime < startTime + duration) {
-                    // Crear tick individual
-                    const tickOsc = audioContext.createOscillator();
-                    const tickGain = audioContext.createGain();
-                    
-                    tickOsc.connect(tickGain);
-                    tickGain.connect(audioContext.destination);
-                    
-                    tickOsc.type = 'square';
-                    tickOsc.frequency.setValueAtTime(800, actualTickTime);
-                    
-                    tickGain.gain.setValueAtTime(0, actualTickTime);
-                    tickGain.gain.linearRampToValueAtTime(0.15, actualTickTime + 0.01);
-                    tickGain.gain.exponentialRampToValueAtTime(0.001, actualTickTime + 0.1);
-                    
-                    tickOsc.start(actualTickTime);
-                    tickOsc.stop(actualTickTime + 0.1);
-                }
+            // Configurar filtro pasa-bajos para sonido más suave
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(800, startTime);
+            filter.Q.setValueAtTime(1, startTime);
+            
+            // Crear distorsión sutil para más realismo
+            const curve = new Float32Array(44100);
+            for (let i = 0; i < 44100; i++) {
+                const x = (i / 44100) * 2 - 1;
+                curve[i] = x * 0.1;
             }
+            distortion.curve = curve;
+            
+            // Conectar la cadena de audio
+            oscillator.connect(distortion);
+            distortion.connect(filter);
+            filter.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            // Configurar oscilador con vibrato
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.setValueAtTime(120, startTime);
+            
+            // Crear efecto de desaceleración más realista
+            for (let i = 0; i < duration * 20; i++) {
+                const time = startTime + (i / 20);
+                const progress = i / (duration * 20);
+                
+                // Curva de desaceleración exponencial
+                const speed = Math.pow(1 - progress, 2);
+                const baseFreq = 120 + (speed * 80);
+                const vibrato = Math.sin(time * 15) * 5 * speed;
+                
+                oscillator.frequency.setValueAtTime(baseFreq + vibrato, time);
+                gainNode.gain.setValueAtTime(0.15 * speed, time);
+                filter.frequency.setValueAtTime(600 + (speed * 400), time);
+            }
+            
+            oscillator.start(startTime);
+            oscillator.stop(startTime + duration);
+        }
+        
+        function createRouletteTickSound(audioContext, startTime, duration) {
+            let tickInterval = 0.08; // Inicio rápido
+            let currentTime = startTime + 0.1;
+            let tickCount = 0;
+            
+            while (currentTime < startTime + duration) {
+                const progress = (currentTime - startTime) / duration;
+                
+                // Crear tick individual con mejor calidad
+                const tickOsc = audioContext.createOscillator();
+                const tickGain = audioContext.createGain();
+                const tickFilter = audioContext.createBiquadFilter();
+                const envelope = audioContext.createGain();
+                
+                // Configurar filtro para el tick
+                tickFilter.type = 'bandpass';
+                tickFilter.frequency.setValueAtTime(1200, currentTime);
+                tickFilter.Q.setValueAtTime(8, currentTime);
+                
+                // Conectar
+                tickOsc.connect(envelope);
+                envelope.connect(tickFilter);
+                tickFilter.connect(tickGain);
+                tickGain.connect(audioContext.destination);
+                
+                // Configurar tick
+                tickOsc.type = 'square';
+                tickOsc.frequency.setValueAtTime(1200 + (Math.random() * 200 - 100), currentTime);
+                
+                // Envelope más natural
+                envelope.gain.setValueAtTime(0, currentTime);
+                envelope.gain.linearRampToValueAtTime(0.25, currentTime + 0.005);
+                envelope.gain.exponentialRampToValueAtTime(0.001, currentTime + 0.08);
+                
+                tickGain.gain.setValueAtTime(1 - progress * 0.7, currentTime);
+                
+                tickOsc.start(currentTime);
+                tickOsc.stop(currentTime + 0.08);
+                
+                // Aumentar intervalo gradualmente (desaceleración)
+                tickInterval = tickInterval * (1 + progress * 0.1);
+                currentTime += tickInterval;
+                tickCount++;
+                
+                if (tickCount > 50) break; // Límite de seguridad
+            }
+        }
+        
+        function createRouletteWhooshSound(audioContext, startTime, duration) {
+            // Sonido de aire/viento para más realismo
+            const bufferSize = audioContext.sampleRate * duration;
+            const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+            const data = buffer.getChannelData(0);
+            
+            // Generar ruido rosa para el efecto whoosh
+            let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+            
+            for (let i = 0; i < bufferSize; i++) {
+                const progress = i / bufferSize;
+                const speed = Math.pow(1 - progress, 1.5);
+                
+                const white = Math.random() * 2 - 1;
+                b0 = 0.99886 * b0 + white * 0.0555179;
+                b1 = 0.99332 * b1 + white * 0.0750759;
+                b2 = 0.96900 * b2 + white * 0.1538520;
+                b3 = 0.86650 * b3 + white * 0.3104856;
+                b4 = 0.55000 * b4 + white * 0.5329522;
+                b5 = -0.7616 * b5 - white * 0.0168980;
+                
+                const pink = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
+                b6 = white * 0.115926;
+                
+                data[i] = pink * 0.05 * speed;
+            }
+            
+            const source = audioContext.createBufferSource();
+            const gainNode = audioContext.createGain();
+            const filter = audioContext.createBiquadFilter();
+            
+            filter.type = 'highpass';
+            filter.frequency.setValueAtTime(200, startTime);
+            
+            source.buffer = buffer;
+            source.connect(filter);
+            filter.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            gainNode.gain.setValueAtTime(0.8, startTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+            
+            source.start(startTime);
         }
         
         function playWinSound() {
@@ -797,29 +880,105 @@
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 const startTime = audioContext.currentTime;
                 
-                // Sonido de victoria - arpeggio ascendente
-                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                // Crear un sonido de victoria más elaborado
+                createWinMelody(audioContext, startTime);
+                createWinHarmony(audioContext, startTime);
+                createWinPercussion(audioContext, startTime);
                 
-                notes.forEach((freq, index) => {
+            } catch (error) {
+                console.log('Audio no soportado en este navegador:', error);
+            }
+        }
+        
+        function createWinMelody(audioContext, startTime) {
+            // Melodía principal más elaborada
+            const melody = [
+                { freq: 523.25, time: 0.0 },   // C5
+                { freq: 659.25, time: 0.15 },  // E5
+                { freq: 783.99, time: 0.3 },   // G5
+                { freq: 1046.50, time: 0.45 }, // C6
+                { freq: 1318.51, time: 0.6 }   // E6
+            ];
+            
+            melody.forEach((note, index) => {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                const filter = audioContext.createBiquadFilter();
+                
+                // Filtro para dulcificar el sonido
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(3000, startTime + note.time);
+                filter.Q.setValueAtTime(1, startTime + note.time);
+                
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioContext.destination);
+                
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(note.freq, startTime + note.time);
+                
+                // Envelope más suave
+                gain.gain.setValueAtTime(0, startTime + note.time);
+                gain.gain.linearRampToValueAtTime(0.25, startTime + note.time + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + note.time + 0.8);
+                
+                osc.start(startTime + note.time);
+                osc.stop(startTime + note.time + 0.8);
+            });
+        }
+        
+        function createWinHarmony(audioContext, startTime) {
+            // Acordes de acompañamiento
+            const chords = [
+                [261.63, 329.63, 392.00], // C mayor
+                [329.63, 415.30, 493.88], // E mayor
+                [392.00, 493.88, 587.33]  // G mayor
+            ];
+            
+            chords.forEach((chord, chordIndex) => {
+                chord.forEach(freq => {
                     const osc = audioContext.createOscillator();
                     const gain = audioContext.createGain();
                     
                     osc.connect(gain);
                     gain.connect(audioContext.destination);
                     
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(freq, startTime + index * 0.2);
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, startTime + chordIndex * 0.3);
                     
-                    gain.gain.setValueAtTime(0, startTime + index * 0.2);
-                    gain.gain.linearRampToValueAtTime(0.2, startTime + index * 0.2 + 0.1);
-                    gain.gain.exponentialRampToValueAtTime(0.001, startTime + index * 0.2 + 0.5);
+                    gain.gain.setValueAtTime(0, startTime + chordIndex * 0.3);
+                    gain.gain.linearRampToValueAtTime(0.08, startTime + chordIndex * 0.3 + 0.1);
+                    gain.gain.exponentialRampToValueAtTime(0.001, startTime + chordIndex * 0.3 + 1);
                     
-                    osc.start(startTime + index * 0.2);
-                    osc.stop(startTime + index * 0.2 + 0.5);
+                    osc.start(startTime + chordIndex * 0.3);
+                    osc.stop(startTime + chordIndex * 0.3 + 1);
                 });
+            });
+        }
+        
+        function createWinPercussion(audioContext, startTime) {
+            // Efecto de percusión sutil
+            for (let i = 0; i < 5; i++) {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                const filter = audioContext.createBiquadFilter();
                 
-            } catch (error) {
-                console.log('Audio no soportado en este navegador:', error);
+                filter.type = 'highpass';
+                filter.frequency.setValueAtTime(2000, startTime + i * 0.1);
+                
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioContext.destination);
+                
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(100 + Math.random() * 200, startTime + i * 0.1);
+                
+                gain.gain.setValueAtTime(0, startTime + i * 0.1);
+                gain.gain.linearRampToValueAtTime(0.1, startTime + i * 0.1 + 0.01);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + i * 0.1 + 0.15);
+                
+                osc.start(startTime + i * 0.1);
+                osc.stop(startTime + i * 0.1 + 0.15);
             }
         }
         
@@ -911,22 +1070,44 @@
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 const startTime = audioContext.currentTime;
                 
-                const osc = audioContext.createOscillator();
+                // Crear un sonido de hover más sofisticado
+                const osc1 = audioContext.createOscillator();
+                const osc2 = audioContext.createOscillator();
                 const gain = audioContext.createGain();
+                const filter = audioContext.createBiquadFilter();
+                const merger = audioContext.createChannelMerger(2);
                 
-                osc.connect(gain);
+                // Configurar filtro pasa-bajos suave
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(1500, startTime);
+                filter.Q.setValueAtTime(0.5, startTime);
+                
+                // Dos osciladores para crear un sonido más rico
+                osc1.type = 'sine';
+                osc2.type = 'triangle';
+                
+                osc1.frequency.setValueAtTime(700, startTime);
+                osc1.frequency.linearRampToValueAtTime(900, startTime + 0.15);
+                
+                osc2.frequency.setValueAtTime(1050, startTime); // Quinta perfecta
+                osc2.frequency.linearRampToValueAtTime(1350, startTime + 0.15);
+                
+                // Conectar
+                osc1.connect(merger, 0, 0);
+                osc2.connect(merger, 0, 1);
+                merger.connect(filter);
+                filter.connect(gain);
                 gain.connect(audioContext.destination);
                 
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(600, startTime);
-                osc.frequency.linearRampToValueAtTime(800, startTime + 0.1);
-                
+                // Envelope más suave y natural
                 gain.gain.setValueAtTime(0, startTime);
-                gain.gain.linearRampToValueAtTime(0.05, startTime + 0.05);
-                gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.2);
+                gain.gain.linearRampToValueAtTime(0.03, startTime + 0.08);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
                 
-                osc.start(startTime);
-                osc.stop(startTime + 0.2);
+                osc1.start(startTime);
+                osc2.start(startTime);
+                osc1.stop(startTime + 0.25);
+                osc2.stop(startTime + 0.25);
                 
             } catch (error) {
                 console.log('Audio no soportado');

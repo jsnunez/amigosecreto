@@ -203,6 +203,7 @@
                                             <th>ID</th>
                                             <th>Nombre</th>
                                             <th>Estado</th>
+                                            <th>Chat</th>
                                             <th>Fecha de Creación</th>
                                             <th>Acciones</th>
                                         </tr>
@@ -217,6 +218,21 @@
                                                         <span class="badge bg-success">Activo</span>
                                                     <% } else { %>
                                                         <span class="badge bg-secondary">Inactivo</span>
+                                                    <% } %>
+                                                </td>
+                                                <td>
+                                                    <% if (game.chat_enabled) { %>
+                                                        <span class="badge bg-primary">🟢 Habilitado</span>
+                                                    <% } else { %>
+                                                        <span class="badge bg-warning text-dark">🔴 Deshabilitado</span>
+                                                    <% } %>
+                                                    <% if (game.is_active) { %>
+                                                        <br>
+                                                        <form action="/admin/toggle-chat/<%= game.id %>" method="POST" style="display: inline; margin-top: 5px;">
+                                                            <button type="submit" class="btn btn-outline-info btn-sm" title="<%= game.chat_enabled ? 'Deshabilitar chat' : 'Habilitar chat' %>">
+                                                                <%= game.chat_enabled ? '🔇' : '💬' %>
+                                                            </button>
+                                                        </form>
                                                     <% } %>
                                                 </td>
                                                 <td><%= new Date(game.created_at).toLocaleDateString() %></td>

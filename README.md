@@ -8,7 +8,10 @@ Aplicación web para organizar intercambios de "Amigo Secreto" con conexión a b
 - **Panel de administración**: Control total sobre los juegos
 - **Asignaciones automáticas**: Algoritmo que genera parejas aleatorias
 - **Seguridad**: Las asignaciones no se pueden cambiar una vez generadas
+- **Chat anónimo**: Sistema de mensajería bidireccional anónima entre participantes
+- **Control de chat**: Los administradores pueden habilitar/deshabilitar el chat por juego
 - **Interfaz moderna**: Diseño responsive con Bootstrap
+- **Audio premium**: Sistema de sonidos inmersivos con Web Audio API
 
 ## 🛠️ Tecnologías Utilizadas
 
@@ -65,7 +68,8 @@ Aplicación web para organizar intercambios de "Amigo Secreto" con conexión a b
 1. **Registro**: Crear cuenta en `/register`
 2. **Login**: Iniciar sesión en `/login`
 3. **Dashboard**: Ver tu asignación cuando el juego esté activo
-4. **Importante**: No puedes cambiar tu asignación una vez generada
+4. **Chat**: Comunicarse anónimamente con tu amigo secreto y la persona que te dará regalo (si está habilitado)
+5. **Importante**: No puedes cambiar tu asignación una vez generada
 
 ### Para Administradores
 
@@ -76,6 +80,7 @@ Aplicación web para organizar intercambios de "Amigo Secreto" con conexión a b
 2. **Panel de administración** (`/admin`):
    - Crear nuevos juegos
    - Activar juegos (genera asignaciones automáticamente)
+   - **Controlar chat**: Habilitar o deshabilitar el chat para cada juego
    - Ver estadísticas de usuarios
    - Gestionar todos los juegos
 
@@ -89,6 +94,7 @@ amigo-secreto/
 │   ├── login.ejs            # Página de login
 │   ├── register.ejs         # Página de registro
 │   ├── dashboard.ejs        # Dashboard principal
+│   ├── chat.ejs            # Sistema de chat anónimo
 │   └── admin.ejs           # Panel de administración
 ├── .env                    # Variables de entorno
 ├── server.js              # Servidor principal
@@ -122,6 +128,14 @@ amigo-secreto/
 - **Restricción de base de datos**: CHECK constraint `user_id != assigned_to` como última línea de defensa
 - **Distribución completamente aleatoria**: Cada activación genera combinaciones únicas e impredecibles
 - **Ciclo perfecto**: Garantiza que todos dan y reciben exactamente un regalo
+
+### 💬 Sistema de Chat Anónimo
+- **Comunicación bidireccional**: Habla con tu amigo secreto (a quien le das regalo) y con quien te da regalo a ti
+- **Anonimato total**: Los participantes no ven nombres reales, solo "Amigo Secreto" 
+- **Control administrativo**: Los administradores pueden habilitar/deshabilitar el chat por cada juego
+- **Interfaz intuitiva**: Dos ventanas de chat claramente diferenciadas
+- **Mensajería en tiempo real**: Sistema de actualización automática de mensajes
+- **Privacidad garantizada**: Solo las personas asignadas pueden comunicarse entre sí
 
 ## 🚦 Estados de la Aplicación
 

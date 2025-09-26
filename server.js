@@ -80,6 +80,7 @@ function initializeDatabase() {
             id INT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(100) NOT NULL,
             is_active BOOLEAN DEFAULT FALSE,
+            chat_enabled BOOLEAN DEFAULT FALSE,
             created_by INT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
@@ -101,6 +102,25 @@ function initializeDatabase() {
         ) ENGINE=InnoDB
     `;
     
+    // Crear tabla de mensajes de chat
+    const createChatMessagesTable = `
+        CREATE TABLE IF NOT EXISTS chat_messages (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            game_id INT NOT NULL,
+            sender_id INT NOT NULL,
+            receiver_id INT NOT NULL,
+            message TEXT NOT NULL,
+            is_anonymous BOOLEAN DEFAULT TRUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE,
+            FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE,
+            INDEX idx_game_receiver (game_id, receiver_id),
+            INDEX idx_game_sender (game_id, sender_id),
+            INDEX idx_created_at (created_at)
+        ) ENGINE=InnoDB
+    `;
+
     db.query(createUsersTable, (err) => {
         if (err) {
             console.error('Error creando tabla users:', err);
@@ -144,6 +164,26 @@ function initializeDatabase() {
             });
         } else {
             console.log('Tabla participants creada o ya existe');
+        }
+    });
+    
+    // Crear tabla de mensajes de chat
+    db.query(createChatMessagesTable, (err) => {
+        if (err) {
+            console.error('Error creando tabla chat_messages:', err);
+        } else {
+            console.log('Tabla chat_messages creada o ya existe');
+        }
+    });
+    
+    // Agregar columna chat_enabled a juegos existentes si no existe
+    db.query('ALTER TABLE games ADD COLUMN chat_enabled BOOLEAN DEFAULT FALSE', (err) => {
+        if (err && err.code !== 'ER_DUP_FIELDNAME') {
+            console.error('Error agregando columna chat_enabled:', err);
+        } else if (err && err.code === 'ER_DUP_FIELDNAME') {
+            console.log('Columna chat_enabled ya existe');
+        } else {
+            console.log('Columna chat_enabled agregada');
         }
     });
     
@@ -327,6 +367,215 @@ app.get('/dashboard', requireAuth, (req, res) => {
     });
 });
 
+// Rutas del Chat
+app.get('/chat', requireAuth, (req, res) => {
+    const userId = req.session.user.id;
+    
+    // Obtener juego activo y verificar si el chat está habilitado
+    db.query('SELECT * FROM games WHERE is_active = TRUE LIMIT 1', (err, games) => {
+        if (err || games.length === 0) {
+            return res.redirect('/dashboard?error=No hay juegos activos');
+        }
+        
+        const game = games[0];
+        
+        // Verificar si el chat está habilitado
+        if (!game.chat_enabled) {
+            return res.redirect('/dashboard?error=El chat está deshabilitado por el administrador');
+        }
+        
+        const gameId = game.id;
+        
+        // Obtener mi asignación (a quien le doy regalo)
+        db.query(`
+            SELECT p.*, u.username as assigned_username 
+            FROM participants p 
+            JOIN users u ON p.assigned_to = u.id 
+            WHERE p.user_id = ? AND p.game_id = ?
+        `, [userId, gameId], (err, myAssignment) => {
+            if (err) {
+                console.error('Error obteniendo mi asignación:', err);
+                return res.redirect('/dashboard?error=Error obteniendo información');
+            }
+            
+            // Obtener quien me da regalo a mí
+            db.query(`
+                SELECT p.*, u.username as giver_username 
+                FROM participants p 
+                JOIN users u ON p.user_id = u.id 
+                WHERE p.assigned_to = ? AND p.game_id = ?
+            `, [userId, gameId], (err, myGiver) => {
+                if (err) {
+                    console.error('Error obteniendo mi dador:', err);
+                    return res.redirect('/dashboard?error=Error obteniendo información');
+                }
+                
+                res.render('chat', {
+                    user: req.session.user,
+                    game: game,
+                    myAssignment: myAssignment.length > 0 ? myAssignment[0] : null,
+                    myGiver: myGiver.length > 0 ? myGiver[0] : null
+                });
+            });
+        });
+    });
+});
+
+// API para obtener mensajes
+app.get('/api/messages/:type', requireAuth, (req, res) => {
+    const userId = req.session.user.id;
+    const type = req.params.type; // 'to' o 'from'
+    
+    // Obtener juego activo y verificar si el chat está habilitado
+    db.query('SELECT id, chat_enabled FROM games WHERE is_active = TRUE LIMIT 1', (err, games) => {
+        if (err || games.length === 0) {
+            return res.json({ success: false, error: 'No hay juegos activos' });
+        }
+        
+        const game = games[0];
+        if (!game.chat_enabled) {
+            return res.json({ success: false, error: 'El chat está deshabilitado para este juego' });
+        }
+        
+        const gameId = game.id;
+        let query, params;
+        
+        if (type === 'to') {
+            // Mensajes entre yo y mi asignado (donde yo doy regalo)
+            // Necesito obtener el ID de mi asignado
+            db.query('SELECT assigned_to FROM participants WHERE user_id = ? AND game_id = ?', [userId, gameId], (err, assignment) => {
+                if (err || assignment.length === 0) {
+                    return res.json({ success: false, error: 'No se encontró asignación' });
+                }
+                
+                const assignedUserId = assignment[0].assigned_to;
+                
+                // Obtener todos los mensajes entre yo y mi asignado
+                query = `
+                    SELECT cm.*, 
+                        CASE 
+                            WHEN cm.sender_id = ? THEN 'sent' 
+                            ELSE 'received' 
+                        END as message_type
+                    FROM chat_messages cm
+                    WHERE cm.game_id = ? 
+                    AND ((cm.sender_id = ? AND cm.receiver_id = ?) OR (cm.sender_id = ? AND cm.receiver_id = ?))
+                    ORDER BY cm.created_at ASC
+                `;
+                
+                db.query(query, [userId, gameId, userId, assignedUserId, assignedUserId, userId], (err, messages) => {
+                    if (err) {
+                        console.error('Error obteniendo mensajes TO:', err);
+                        return res.json({ success: false, error: 'Error obteniendo mensajes' });
+                    }
+                    res.json({ success: true, messages: messages });
+                });
+            });
+        } else {
+            // Mensajes entre yo y quien me da regalo (donde recibo regalo)
+            // Necesito obtener el ID de quien me da regalo
+            db.query('SELECT user_id FROM participants WHERE assigned_to = ? AND game_id = ?', [userId, gameId], (err, giver) => {
+                if (err || giver.length === 0) {
+                    return res.json({ success: false, error: 'No se encontró quien te da regalo' });
+                }
+                
+                const giverUserId = giver[0].user_id;
+                
+                // Obtener todos los mensajes entre yo y quien me da regalo
+                query = `
+                    SELECT cm.*, 
+                        CASE 
+                            WHEN cm.sender_id = ? THEN 'sent' 
+                            ELSE 'received' 
+                        END as message_type
+                    FROM chat_messages cm
+                    WHERE cm.game_id = ? 
+                    AND ((cm.sender_id = ? AND cm.receiver_id = ?) OR (cm.sender_id = ? AND cm.receiver_id = ?))
+                    ORDER BY cm.created_at ASC
+                `;
+                
+                db.query(query, [userId, gameId, userId, giverUserId, giverUserId, userId], (err, messages) => {
+                    if (err) {
+                        console.error('Error obteniendo mensajes FROM:', err);
+                        return res.json({ success: false, error: 'Error obteniendo mensajes' });
+                    }
+                    res.json({ success: true, messages: messages });
+                });
+            });
+        }
+    });
+});
+
+// API para enviar mensaje
+app.post('/api/send-message', requireAuth, (req, res) => {
+    const userId = req.session.user.id;
+    const { message, type } = req.body; // type: 'to' o 'from'
+    
+    if (!message || !message.trim()) {
+        return res.json({ success: false, error: 'Mensaje vacío' });
+    }
+    
+    // Obtener juego activo y verificar si el chat está habilitado
+    db.query('SELECT id, chat_enabled FROM games WHERE is_active = TRUE LIMIT 1', (err, games) => {
+        if (err || games.length === 0) {
+            return res.json({ success: false, error: 'No hay juegos activos' });
+        }
+        
+        const game = games[0];
+        if (!game.chat_enabled) {
+            return res.json({ success: false, error: 'El chat está deshabilitado para este juego' });
+        }
+        
+        const gameId = game.id;
+        
+        if (type === 'to') {
+            // Enviar mensaje a mi asignado (a quien le doy regalo)
+            db.query('SELECT assigned_to FROM participants WHERE user_id = ? AND game_id = ?', [userId, gameId], (err, assignment) => {
+                if (err || assignment.length === 0) {
+                    return res.json({ success: false, error: 'No se encontró tu asignación' });
+                }
+                
+                const receiverId = assignment[0].assigned_to;
+                
+                // Insertar mensaje
+                db.query(
+                    'INSERT INTO chat_messages (game_id, sender_id, receiver_id, message) VALUES (?, ?, ?, ?)',
+                    [gameId, userId, receiverId, message.trim()],
+                    (err) => {
+                        if (err) {
+                            console.error('Error enviando mensaje TO:', err);
+                            return res.json({ success: false, error: 'Error enviando mensaje' });
+                        }
+                        res.json({ success: true });
+                    }
+                );
+            });
+        } else {
+            // Enviar mensaje a quien me da regalo (type === 'from')
+            db.query('SELECT user_id FROM participants WHERE assigned_to = ? AND game_id = ?', [userId, gameId], (err, giver) => {
+                if (err || giver.length === 0) {
+                    return res.json({ success: false, error: 'No se encontró quien te da regalo' });
+                }
+                
+                const receiverId = giver[0].user_id;
+                
+                // Insertar mensaje
+                db.query(
+                    'INSERT INTO chat_messages (game_id, sender_id, receiver_id, message) VALUES (?, ?, ?, ?)',
+                    [gameId, userId, receiverId, message.trim()],
+                    (err) => {
+                        if (err) {
+                            console.error('Error enviando mensaje FROM:', err);
+                            return res.json({ success: false, error: 'Error enviando mensaje' });
+                        }
+                        res.json({ success: true });
+                    }
+                );
+            });
+        }
+    });
+});
+
 // Panel de administración
 app.get('/admin', requireAdmin, (req, res) => {
     // Obtener todos los juegos y usuarios
@@ -408,6 +657,33 @@ app.post('/admin/activate-game/:id', requireAdmin, (req, res) => {
     });
 });
 
+// Habilitar/deshabilitar chat
+app.post('/admin/toggle-chat/:id', requireAdmin, (req, res) => {
+    const gameId = req.params.id;
+    
+    // Obtener el estado actual del chat
+    db.query('SELECT chat_enabled FROM games WHERE id = ?', [gameId], (err, result) => {
+        if (err || result.length === 0) {
+            console.error('Error obteniendo estado del chat:', err);
+            return res.redirect('/admin?error=Error modificando estado del chat');
+        }
+        
+        const currentChatStatus = result[0].chat_enabled;
+        const newChatStatus = !currentChatStatus;
+        
+        // Actualizar el estado del chat
+        db.query('UPDATE games SET chat_enabled = ? WHERE id = ?', [newChatStatus, gameId], (err) => {
+            if (err) {
+                console.error('Error actualizando estado del chat:', err);
+                return res.redirect('/admin?error=Error modificando estado del chat');
+            }
+            
+            const message = newChatStatus ? 'Chat habilitado' : 'Chat deshabilitado';
+            res.redirect(`/admin?success=${message} exitosamente`);
+        });
+    });
+});
+
 // Función para generar asignaciones aleatorias (solo primera vez)
 function generateAssignments(gameId, callback) {
     // Obtener todos los usuarios (excepto administradores)
@@ -479,7 +755,9 @@ function generateAssignments(gameId, callback) {
             callback(true);
         });
     });
-}// Logout
+}
+
+// Logout
 app.get('/logout', (req, res) => {
     req.session.destroy();
     res.redirect('/login');

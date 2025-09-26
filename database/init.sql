@@ -37,6 +37,23 @@ CREATE TABLE IF NOT EXISTS participants (
     CHECK (user_id != assigned_to)
 );
 
+-- Tabla de mensajes de chat
+CREATE TABLE IF NOT EXISTS chat_messages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    game_id INT NOT NULL,
+    sender_id INT NOT NULL,
+    receiver_id INT NOT NULL,
+    message TEXT NOT NULL,
+    is_anonymous BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE,
+    FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_game_receiver (game_id, receiver_id),
+    INDEX idx_game_sender (game_id, sender_id),
+    INDEX idx_created_at (created_at)
+);
+
 -- Insertar usuario administrador por defecto
 -- Contraseña: admin123 (hasheada con bcrypt)
 INSERT INTO users (username, password, is_admin) VALUES 

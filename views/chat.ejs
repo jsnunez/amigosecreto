@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Secreto - Amigo Secreto</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #8B0000 100%);
+            min-height: 100vh;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #DAA520 0%, #B8860B 100%) !important;
+            border-bottom: 3px solid #8B0000;
+        }
+        .navbar-brand, .navbar-text {
+            color: #000 !important;
+            font-weight: bold;
+        }
+        .chat-container {
+            height: 70vh;
+            border-radius: 15px;
+            overflow: hidden;
+            border: 2px solid #DAA520;
+            background: rgba(0,0,0,0.8);
+        }
+        .chat-header {
+            background: linear-gradient(135deg, #DAA520 0%, #B8860B 100%);
+            color: #000;
+            padding: 15px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .chat-messages {
+            height: 400px;
+            overflow-y: auto;
+            padding: 15px;
+            background: rgba(0,0,0,0.9);
+        }
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        .message.sent {
+            background: linear-gradient(135deg, #8B0000 0%, #DC143C 100%);
+            color: #DAA520;
+            margin-left: auto;
+            text-align: right;
+        }
+        .message.received {
+            background: linear-gradient(135deg, #DAA520 0%, #B8860B 100%);
+            color: #000;
+            margin-right: auto;
+        }
+        .message-time {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+        .chat-input {
+            padding: 15px;
+            background: rgba(0,0,0,0.8);
+            border-top: 2px solid #DAA520;
+        }
+        .form-control {
+            border: 2px solid #DAA520;
+            background: rgba(0,0,0,0.7);
+            color: #DAA520;
+        }
+        .form-control:focus {
+            border-color: #8B0000;
+            box-shadow: 0 0 0 0.2rem rgba(139, 0, 0, 0.25);
+            background: rgba(0,0,0,0.7);
+            color: #DAA520;
+        }
+        .form-control::placeholder {
+            color: rgba(218, 165, 32, 0.7);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #DAA520 0%, #B8860B 100%);
+            border: 2px solid #8B0000;
+            color: #000;
+            font-weight: bold;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #B8860B 0%, #DAA520 100%);
+            border: 2px solid #8B0000;
+            color: #000;
+        }
+        .btn-outline-secondary {
+            border-color: #DAA520;
+            color: #DAA520;
+            font-weight: bold;
+        }
+        .btn-outline-secondary:hover {
+            background-color: #DAA520;
+            border-color: #DAA520;
+            color: #000;
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-bottom: 2rem;
+            border: 2px solid #DAA520;
+            background: rgba(0,0,0,0.8);
+        }
+        .card-header {
+            background: linear-gradient(135deg, #DAA520 0%, #B8860B 100%);
+            color: #000;
+            border-radius: 15px 15px 0 0 !important;
+            border-bottom: 2px solid #8B0000;
+            font-weight: bold;
+        }
+        .text-light {
+            color: #DAA520 !important;
+        }
+        .anonymous-badge {
+            background: linear-gradient(135deg, #8B0000 0%, #DC143C 100%);
+            color: #DAA520;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+        .loading {
+            text-align: center;
+            color: #DAA520;
+            padding: 20px;
+        }
+        .no-messages {
+            text-align: center;
+            color: rgba(218, 165, 32, 0.7);
+            padding: 40px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <span class="navbar-brand">⚡ TITANES ELITE - Chat Secreto</span>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">Hola, <strong><%= user.username %></strong></span>
+                <a class="nav-link btn btn-outline-secondary btn-sm me-2" href="/dashboard">Dashboard</a>
+                <% if (user.is_admin) { %>
+                    <a class="nav-link btn btn-outline-secondary btn-sm me-2" href="/admin">Admin</a>
+                <% } %>
+                <a class="nav-link btn btn-outline-secondary btn-sm" href="/logout">Cerrar Sesión</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Advertencia de Anonimato -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="alert alert-warning" style="background: linear-gradient(135deg, #DAA520 0%, #B8860B 100%); border: 2px solid #8B0000; color: #000;">
+                    <div class="text-center">
+                        <strong><i class="fas fa-exclamation-triangle"></i> ¡RECUERDA MANTENER EL ANONIMATO!</strong><br>
+                        <small>No menciones tu nombre, trabajo, ubicación, o cualquier información personal que pueda revelarte.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <% if (!myAssignment && !myGiver) { %>
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div style="font-size: 3rem; margin-bottom: 1rem;">💬</div>
+                            <h3 class="text-light">Chat no disponible</h3>
+                            <p class="text-light">No hay asignaciones activas. Espera a que un administrador active un juego.</p>
+                            <a href="/dashboard" class="btn btn-primary">Volver al Dashboard</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <% } else { %>
+            <div class="row">
+                <!-- Chat con mi amigo secreto (a quien le doy regalo) -->
+                <% if (myAssignment) { %>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>💬 Chat con tu Amigo Secreto</h4>
+                                <small>🎁 Estás dando un regalo a alguien especial</small>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="chat-container">
+                                    <div class="anonymous-badge">🎭 Chat Anónimo - Tú das el regalo</div>
+                                    <div class="chat-messages" id="chatTo">
+                                        <div class="loading">
+                                            <i class="fas fa-spinner fa-spin"></i> Cargando mensajes...
+                                        </div>
+                                    </div>
+                                    <div class="chat-input">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="messageToInput" 
+                                                   placeholder="Escribe un mensaje secreto..." maxlength="500">
+                                            <button class="btn btn-primary" id="sendToBtn">
+                                                <i class="fas fa-paper-plane"></i> Enviar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+
+                <!-- Chat con quien me da regalo -->
+                <% if (myGiver) { %>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>💬 Chat con tu Amigo Secreto</h4>
+                                <small>🎭 Alguien especial te dará un regalo</small>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="chat-container">
+                                    <div class="anonymous-badge">🎁 Chat Anónimo - Recibes el regalo</div>
+                                    <div class="chat-messages" id="chatFrom">
+                                        <div class="loading">
+                                            <i class="fas fa-spinner fa-spin"></i> Cargando mensajes...
+                                        </div>
+                                    </div>
+                                    <div class="chat-input">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="messageFromInput" 
+                                                   placeholder="Responde de forma anónima..." maxlength="500">
+                                            <button class="btn btn-primary" id="sendFromBtn">
+                                                <i class="fas fa-paper-plane"></i> Enviar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+            </div>
+
+            <!-- Instrucciones -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4>📋 Instrucciones del Chat Secreto</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="text-center mb-3">
+                                        <div style="font-size: 2rem; color: #DAA520;">🎭</div>
+                                        <h5 class="text-light">Anónimo</h5>
+                                        <p class="text-light">Todos los mensajes son completamente anónimos</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center mb-3">
+                                        <div style="font-size: 2rem; color: #DAA520;">💬</div>
+                                        <h5 class="text-light">Dos Chats Secretos</h5>
+                                        <p class="text-light">Un chat con quien recibes regalo y otro con quien le das regalo</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center mb-3">
+                                        <div style="font-size: 2rem; color: #DAA520;">🤐</div>
+                                        <h5 class="text-light">Mantén el Secreto</h5>
+                                        <p class="text-light">No menciones tu nombre, trabajo, o información que te identifique</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center mb-3">
+                                        <div style="font-size: 2rem; color: #DAA520;">❤️</div>
+                                        <h5 class="text-light">Sé Amable</h5>
+                                        <p class="text-light">Usa el chat para hacer que la experiencia sea especial</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <% } %>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Variables globales
+        let loadingMessages = false;
+
+        // Función para formatear fecha
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 60000) { // Menos de 1 minuto
+                return 'Ahora';
+            } else if (diff < 3600000) { // Menos de 1 hora
+                const minutes = Math.floor(diff / 60000);
+                return `Hace ${minutes} min`;
+            } else if (diff < 86400000) { // Menos de 1 día
+                const hours = Math.floor(diff / 3600000);
+                return `Hace ${hours}h`;
+            } else {
+                return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            }
+        }
+
+        // Función para cargar mensajes
+        async function loadMessages(type) {
+            try {
+                const response = await fetch(`/api/messages/${type}`);
+                const data = await response.json();
+                
+                const chatContainer = document.getElementById(type === 'to' ? 'chatTo' : 'chatFrom');
+                
+                if (data.success) {
+                    if (data.messages.length === 0) {
+                        chatContainer.innerHTML = '<div class="no-messages">No hay mensajes aún. ¡Sé el primero en escribir! 💬</div>';
+                    } else {
+                        chatContainer.innerHTML = '';
+                        data.messages.forEach(msg => {
+                            const messageDiv = document.createElement('div');
+                            messageDiv.className = `message ${msg.message_type}`;
+                            messageDiv.innerHTML = `
+                                <div>${msg.message}</div>
+                                <div class="message-time">${formatDate(msg.created_at)}</div>
+                            `;
+                            chatContainer.appendChild(messageDiv);
+                        });
+                    }
+                    
+                    // Scroll hacia abajo
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                } else {
+                    chatContainer.innerHTML = `<div class="no-messages">Error cargando mensajes: ${data.error}</div>`;
+                }
+            } catch (error) {
+                console.error('Error cargando mensajes:', error);
+                const chatContainer = document.getElementById(type === 'to' ? 'chatTo' : 'chatFrom');
+                chatContainer.innerHTML = '<div class="no-messages">Error de conexión</div>';
+            }
+        }
+
+        // Función para enviar mensaje
+        async function sendMessage(type) {
+            const input = document.getElementById(type === 'to' ? 'messageToInput' : 'messageFromInput');
+            const button = document.getElementById(type === 'to' ? 'sendToBtn' : 'sendFromBtn');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Deshabilitar input y botón
+            input.disabled = true;
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+            
+            try {
+                const response = await fetch('/api/send-message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message, type })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    input.value = '';
+                    await loadMessages(type);
+                } else {
+                    alert('Error enviando mensaje: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error enviando mensaje:', error);
+                alert('Error de conexión');
+            } finally {
+                // Rehabilitar input y botón
+                input.disabled = false;
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar';
+                input.focus();
+            }
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cargar mensajes iniciales
+            <% if (myAssignment) { %>
+                loadMessages('to');
+                
+                // Event listeners para chat "to"
+                document.getElementById('sendToBtn').addEventListener('click', () => sendMessage('to'));
+                document.getElementById('messageToInput').addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage('to');
+                    }
+                });
+            <% } %>
+            
+            <% if (myGiver) { %>
+                loadMessages('from');
+                
+                // Event listeners para chat "from"
+                document.getElementById('sendFromBtn').addEventListener('click', () => sendMessage('from'));
+                document.getElementById('messageFromInput').addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage('from');
+                    }
+                });
+            <% } %>
+            
+            // Recargar mensajes cada 10 segundos
+            setInterval(() => {
+                <% if (myAssignment) { %>
+                    loadMessages('to');
+                <% } %>
+                <% if (myGiver) { %>
+                    loadMessages('from');
+                <% } %>
+            }, 10000);
+        });
+    </script>
+</body>
+</html>

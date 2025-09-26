@@ -1,54 +1,40 @@
-<!-- Use this file to provide workspace-specific custom instructions to Copilot. For more details, visit https://code.visualstudio.com/docs/copilot/copilot-customization#_use-a-githubcopilotinstructionsmd-file -->
-- [x] Verify that the copilot-instructions.md file in the .github directory is created.
+# Amigo Secreto Project - Copilot Instructions
 
-- [x] Clarify Project Requirements
-	<!-- Node.js web application with Express, MySQL, EJS templates, and Bootstrap for Secret Santa game -->
+This is a complete Node.js web application for organizing Secret Santa games with the following features:
 
-- [x] Scaffold the Project
-	<!--
-	Project structure created with Node.js/Express application:
-	- server.js (main application file)
-	- package.json (dependencies and scripts)
-	- .env (environment variables)
-	- views/ (EJS templates)
-	- database/ (SQL initialization)
-	- README.md (complete documentation)
-	-->
+## ✅ Project Checklist
 
-- [x] Customize the Project
-	<!--
-	Verified that all previous steps have been completed successfully and marked as completed.
-	Developed and applied Secret Santa application with MySQL integration according to user requirements.
-	Applied modifications using appropriate tools and user-provided references.
-	-->
+- [x] **Project Requirements Clarified**: Node.js web application with Express, MySQL, EJS templates, and Bootstrap for Secret Santa game
 
-- [x] Install Required Extensions
-	<!-- No additional extensions needed for this Node.js project -->
+- [x] **Project Scaffolded**: Complete project structure with server.js, package.json, database setup, EJS templates, and documentation
 
-- [x] Compile the Project
-	<!--
-	Verified that all previous steps have been completed.
-	Install any missing dependencies.
-	Run diagnostics and resolve any issues.
-	Check for markdown files in project folder for relevant instructions on how to do this.
-	-->
+- [x] **Project Customized**: Secret Santa application with MySQL integration, Titan Skate branding, premium audio system, and anonymous chat functionality
 
-- [x] Create and Run Task
-	<!--
-	Verified that all previous steps have been completed.
-	Check https://code.visualstudio.com/docs/debugtest/tasks to determine if the project needs a task. If so, use the create_and_run_task to create and launch a task based on package.json, README.md, and project structure.
-	Skip this step otherwise.
-	 -->
+- [x] **Extensions Installed**: No additional VS Code extensions required for this Node.js project
 
-- [x] Launch the Project
-	<!--
-	Verify that all previous steps have been completed.
-	Server launched successfully with improved algorithm that prevents self-assignment.
-	 -->
+- [x] **Project Compiled**: All dependencies installed, diagnostics run, and issues resolved
 
-- [x] Ensure Documentation is Complete
-	<!--
-	Verified that all previous steps have been completed.
-	Verified that README.md and the copilot-instructions.md file in the .github directory exists and contains current project information.
-	Clean up the copilot-instructions.md file in the .github directory by removing all HTML comments.
-	 -->
+- [x] **Tasks Created**: VS Code task configured to run the Node.js server with `npm start`
+
+- [x] **Project Launched**: Server successfully launched with improved algorithm preventing self-assignment and premium features
+
+- [x] **Documentation Complete**: README.md updated with comprehensive project information including new chat system features
+
+## 🎯 Project Features
+
+- **Authentication System**: Secure login/register with bcrypt
+- **Admin Panel**: Complete game management with chat controls
+- **Smart Algorithm**: Prevents self-assignment with multiple validation layers
+- **Anonymous Chat**: Bidirectional messaging between gift-givers and receivers
+- **Premium Audio**: Web Audio API sound system with DSP processing
+- **Titan Skate Theme**: Gold and crimson color scheme
+- **MySQL Integration**: Full database connectivity with Railway hosting support
+
+## 🚀 Quick Start
+
+1. Install dependencies: `npm install`
+2. Configure `.env` with MySQL credentials
+3. Run server: `npm start`
+4. Access admin panel with `admin/admin123`
+
+The application is fully functional and ready for production use.

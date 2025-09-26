@@ -224,12 +224,14 @@
                                                     <% if (!game.is_active) { %>
                                                         <form action="/admin/activate-game/<%= game.id %>" method="POST" style="display: inline;">
                                                             <button type="submit" class="btn btn-success btn-sm" 
-                                                                    onclick="return confirm('¿Estás seguro de activar este juego? Esto generará nuevas asignaciones aleatorias y desactivará otros juegos.')">
+                                                                    onclick="return confirm('¿Estás seguro de activar este juego?\n\n•  Se generarán asignaciones aleatorias\n\n\n¿Continuar?')">
                                                                 Activar
                                                             </button>
                                                         </form>
                                                     <% } else { %>
                                                         <span class="text-success">✓ Activo</span>
+                                                        <br>
+                                                        <small class="text-muted">Las asignaciones están protegidas</small>
                                                     <% } %>
                                                 </td>
                                             </tr>
@@ -297,15 +299,15 @@
                             </div>
                             <div class="col-md-3">
                                 <h5>2. Activar Juego</h5>
-                                <p>Activa el juego cuando todos los participantes estén registrados. Esto generará las asignaciones automáticamente.</p>
+                                <p>Activa el juego cuando todos los participantes estén registrados. <strong>Las asignaciones solo se generan la primera vez que activas el juego.</strong></p>
                             </div>
                             <div class="col-md-3">
-                                <h5>3. Algoritmo Inteligente</h5>
-                                <p>🔄 El sistema garantiza que ninguna persona sea su propio amigo secreto mediante un algoritmo de validación.</p>
+                                <h5>3. Protección de Sorteo</h5>
+                                <p>� Una vez generadas las asignaciones, están protegidas permanentemente. Re-activar el juego no cambia el sorteo.</p>
                             </div>
                             <div class="col-md-3">
                                 <h5>4. Importante</h5>
-                                <p>⚠️ Una vez activado, las asignaciones no se pueden cambiar. Solo un juego puede estar activo a la vez.</p>
+                                <p>⚠️ El sorteo es definitivo y no se puede modificar. Solo un juego puede estar activo a la vez.</p>
                             </div>
                         </div>
                     </div>

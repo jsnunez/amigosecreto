@@ -362,117 +362,124 @@ app.post('/admin/create-game', requireAdmin, (req, res) => {
     });
 });
 
-// Activar juego y generar asignaciones
+// Activar juego y generar asignaciones (solo la primera vez)
 app.post('/admin/activate-game/:id', requireAdmin, (req, res) => {
     const gameId = req.params.id;
     
-    // Primero, desactivar todos los juegos
-    db.query('UPDATE games SET is_active = FALSE', (err) => {
+    // Verificar si ya existen asignaciones para este juego
+    db.query('SELECT COUNT(*) as count FROM participants WHERE game_id = ?', [gameId], (err, countResult) => {
         if (err) {
-            console.error('Error desactivando juegos:', err);
+            console.error('Error verificando asignaciones:', err);
             return res.redirect('/admin?error=Error activando juego');
         }
         
-        // Activar el juego seleccionado
-        db.query('UPDATE games SET is_active = TRUE WHERE id = ?', [gameId], (err) => {
+        const hasExistingAssignments = countResult[0].count > 0;
+        
+        // Primero, desactivar todos los juegos
+        db.query('UPDATE games SET is_active = FALSE', (err) => {
             if (err) {
-                console.error('Error activando juego:', err);
+                console.error('Error desactivando juegos:', err);
                 return res.redirect('/admin?error=Error activando juego');
             }
             
-            // Generar asignaciones aleatorias
-            generateAssignments(gameId, (success) => {
-                if (success) {
-                    res.redirect('/admin?success=Juego activado y asignaciones generadas');
+            // Activar el juego seleccionado
+            db.query('UPDATE games SET is_active = TRUE WHERE id = ?', [gameId], (err) => {
+                if (err) {
+                    console.error('Error activando juego:', err);
+                    return res.redirect('/admin?error=Error activando juego');
+                }
+                
+                if (hasExistingAssignments) {
+                    // Si ya hay asignaciones, solo activar el juego sin generar nuevas asignaciones
+                    console.log('El juego ya tiene asignaciones existentes, manteniéndolas...');
+                    res.redirect('/admin?success=Juego activado - Se mantuvieron las asignaciones existentes');
                 } else {
-                    res.redirect('/admin?error=Error generando asignaciones');
+                    // Generar asignaciones aleatorias solo si no existen
+                    generateAssignments(gameId, (success) => {
+                        if (success) {
+                            res.redirect('/admin?success=Juego activado y asignaciones generadas por primera vez');
+                        } else {
+                            res.redirect('/admin?error=Error generando asignaciones');
+                        }
+                    });
                 }
             });
         });
     });
 });
 
-// Función para generar asignaciones aleatorias
+// Función para generar asignaciones aleatorias (solo primera vez)
 function generateAssignments(gameId, callback) {
-    // Limpiar asignaciones previas del juego
-    db.query('DELETE FROM participants WHERE game_id = ?', [gameId], (err) => {
+    // Obtener todos los usuarios (excepto administradores)
+    db.query('SELECT id FROM users WHERE is_admin = FALSE', (err, users) => {
         if (err) {
-            console.error('Error limpiando asignaciones:', err);
+            console.error('Error obteniendo usuarios:', err);
             return callback(false);
         }
         
-        // Obtener todos los usuarios (excepto administradores)
-        db.query('SELECT id FROM users WHERE is_admin = FALSE', (err, users) => {
-            if (err) {
-                console.error('Error obteniendo usuarios:', err);
-                return callback(false);
+        if (users.length < 2) {
+            console.error('Se necesitan al menos 2 usuarios para jugar');
+            return callback(false);
+        }
+        
+        // Crear array de usuarios
+        const userIds = users.map(user => user.id);
+        let validAssignments = null;
+        let attempts = 0;
+        const maxAttempts = 100;
+            
+        
+        // Intentar generar asignaciones válidas (nadie se asigna a sí mismo)
+        while (!validAssignments && attempts < maxAttempts) {
+            attempts++;
+            const shuffledUsers = [...userIds];
+            
+            // Algoritmo de Fisher-Yates para mezclar
+            for (let i = shuffledUsers.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffledUsers[i], shuffledUsers[j]] = [shuffledUsers[j], shuffledUsers[i]];
             }
             
-            if (users.length < 2) {
-                console.error('Se necesitan al menos 2 usuarios para jugar');
-                return callback(false);
-            }
-            
-            // Crear array de usuarios
-            const userIds = users.map(user => user.id);
-            let validAssignments = null;
-            let attempts = 0;
-            const maxAttempts = 100;
-            
-            // Intentar generar asignaciones válidas (nadie se asigna a sí mismo)
-            while (!validAssignments && attempts < maxAttempts) {
-                attempts++;
-                const shuffledUsers = [...userIds];
-                
-                // Algoritmo de Fisher-Yates para mezclar
-                for (let i = shuffledUsers.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [shuffledUsers[i], shuffledUsers[j]] = [shuffledUsers[j], shuffledUsers[i]];
+            // Verificar que nadie se asigne a sí mismo
+            let isValid = true;
+            for (let i = 0; i < userIds.length; i++) {
+                if (userIds[i] === shuffledUsers[i]) {
+                    isValid = false;
+                    break;
                 }
-                
-                // Verificar que nadie se asigne a sí mismo
-                let isValid = true;
+            }
+            
+            // Si es válida, crear las asignaciones
+            if (isValid) {
+                const assignments = [];
                 for (let i = 0; i < userIds.length; i++) {
-                    if (userIds[i] === shuffledUsers[i]) {
-                        isValid = false;
-                        break;
-                    }
+                    const giver = userIds[i];
+                    const receiver = shuffledUsers[i];
+                    assignments.push([giver, gameId, receiver]);
                 }
-                
-                // Si es válida, crear las asignaciones
-                if (isValid) {
-                    const assignments = [];
-                    for (let i = 0; i < userIds.length; i++) {
-                        const giver = userIds[i];
-                        const receiver = shuffledUsers[i];
-                        assignments.push([giver, gameId, receiver]);
-                    }
-                    validAssignments = assignments;
-                }
+                validAssignments = assignments;
             }
-            
-            // Si no se pudieron generar asignaciones válidas después de muchos intentos
-            if (!validAssignments) {
-                console.error('No se pudieron generar asignaciones válidas después de', maxAttempts, 'intentos');
+        }
+        
+        // Si no se pudieron generar asignaciones válidas después de muchos intentos
+        if (!validAssignments) {
+            console.error('No se pudieron generar asignaciones válidas después de', maxAttempts, 'intentos');
+            return callback(false);
+        }
+        
+        // Insertar asignaciones en la base de datos
+        const insertQuery = 'INSERT INTO participants (user_id, game_id, assigned_to) VALUES ?';
+        db.query(insertQuery, [validAssignments], (err) => {
+            if (err) {
+                console.error('Error insertando asignaciones:', err);
                 return callback(false);
             }
             
-            // Insertar asignaciones en la base de datos
-            const insertQuery = 'INSERT INTO participants (user_id, game_id, assigned_to) VALUES ?';
-            db.query(insertQuery, [validAssignments], (err) => {
-                if (err) {
-                    console.error('Error insertando asignaciones:', err);
-                    return callback(false);
-                }
-                
-                console.log('Asignaciones generadas exitosamente después de', attempts, 'intentos');
-                callback(true);
-            });
+            console.log('Asignaciones generadas exitosamente después de', attempts, 'intentos');
+            callback(true);
         });
     });
-}
-
-// Logout
+}// Logout
 app.get('/logout', (req, res) => {
     req.session.destroy();
     res.redirect('/login');
